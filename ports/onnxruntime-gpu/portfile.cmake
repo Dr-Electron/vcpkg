@@ -15,6 +15,14 @@ vcpkg_extract_source_archive_ex(
     REF ${VERSION}
 )
 
+# Download repo for experimental features
+vcpkg_from_github(
+    OUT_SOURCE_PATH REPO_PATH
+    REPO microsoft/onnxruntime
+    REF v1.11.1
+    SHA512 319d0659f253e976c658e9b0f68e4fb260c14a6cb57c666a0c62df610fc84d009e5edb0c7273f843161db8a545e11fa519e474a2897ef0f2155480393e3f1ccd
+)
+
 file(MAKE_DIRECTORY
         ${CURRENT_PACKAGES_DIR}/include
         ${CURRENT_PACKAGES_DIR}/lib
@@ -23,18 +31,33 @@ file(MAKE_DIRECTORY
         ${CURRENT_PACKAGES_DIR}/debug/bin
     )
 
+# Copy experimental headers
+file(COPY
+        ${REPO_PATH}/include/onnxruntime/core/session/experimental_onnxruntime_cxx_api.h ${REPO_PATH}/include/onnxruntime/core/session/experimental_onnxruntime_cxx_inline.h
+        DESTINATION ${CURRENT_PACKAGES_DIR}/include
+    )
+
 file(COPY
         ${SOURCE_PATH}/onnxruntime-win-x64-gpu-1.11.1/include
         DESTINATION ${CURRENT_PACKAGES_DIR}
     )
 
-file(COPY ${SOURCE_PATH}/onnxruntime-win-x64-gpu-1.11.1/lib/onnxruntime.lib
+# Glob and copy all libs so that different executation providers can be used
+file(GLOB STATIC_LIBRARIES
+    ${SOURCE_PATH}/onnxruntime-win-x64-gpu-1.11.1/lib/*.lib
+)
+
+file(GLOB DYNAMIC_LIBRARIES
+    ${SOURCE_PATH}/onnxruntime-win-x64-gpu-1.11.1/lib/*.dll
+)
+
+file(COPY ${STATIC_LIBRARIES}
     DESTINATION ${CURRENT_PACKAGES_DIR}/lib)
-file(COPY ${SOURCE_PATH}/onnxruntime-win-x64-gpu-1.11.1/lib/onnxruntime.lib
+file(COPY ${STATIC_LIBRARIES}
     DESTINATION ${CURRENT_PACKAGES_DIR}/debug/lib)
-file(COPY ${SOURCE_PATH}/onnxruntime-win-x64-gpu-1.11.1/lib/onnxruntime.dll
+file(COPY ${DYNAMIC_LIBRARIES}
     DESTINATION ${CURRENT_PACKAGES_DIR}/bin)
-file(COPY ${SOURCE_PATH}/onnxruntime-win-x64-gpu-1.11.1/lib/onnxruntime.dll
+file(COPY ${DYNAMIC_LIBRARIES}
     DESTINATION ${CURRENT_PACKAGES_DIR}/debug/bin)
 
 # # Handle copyright
